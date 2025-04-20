@@ -2,6 +2,8 @@ import allure
 from selenium.common import TimeoutException
 from selenium.webdriver.support import expected_conditions as Ec
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from data import BaseData as Bd
 import logging
 
@@ -61,13 +63,6 @@ class BasePage: #Класс с базовыми методами
             print(f"Элемент с локатором {locator} не стал кликабельным за отведенное время.")
             raise
 
-
-    # Метод скроллит страницу к элементу
-    @allure.step('Скроллит страницу к {locator}')
-    def scroll_to_element(self, locator):
-        element = self.wait_for_load(locator)
-        self.driver.execute_script("arguments[0].scrollIntoView();", element)
-
     @allure.step('Достаем текст элемента по локатору {locator}')
     def get_element_text(self, locator):
         return self.find_element(locator).text
@@ -86,7 +81,8 @@ class BasePage: #Класс с базовыми методами
                 name="screenshot",
                 attachment_type=allure.attachment_type.PNG
             )
-            raise AssertionError(f"Элемент с локатором {locator} не найден на странице.")
+            return False
+
 
     # Метод нажимающий на элемент
     @allure.step('Нажимаем на элемент {locator}')
@@ -123,42 +119,20 @@ class BasePage: #Класс с базовыми методами
         self.driver.find_element(*locator).clear()
         self.driver.find_element(*locator).send_keys(set_data)
 
-    # Метод сравнивает Ожидаем URL(expect_url) c Фактическим URL(actual_url), если совпадает возвращает True
-    # Метод так же принимает Локатор, для ожидания загрузки страницы
-    @allure.step('Сравниваем URL текущей страницы с ожидаемой {expect_url}')
-    def check_current_url(self, expect_url, locator=None):
-        if locator:
-            self.wait_for_load(locator)
-        actual_url = self.driver.current_url
-        if actual_url != expect_url:
-            allure.attach(
-                body=self.driver.get_screenshot_as_png(),
-                name="screenshot",
-                attachment_type=allure.attachment_type.PNG
-            )
-            raise AssertionError(f"Ожидаемый URL: {expect_url}, Фактический URL: {actual_url}")
-        return True
-
     @allure.step('Переключаемся на вкладку {number_tab}')
     def switch_tab(self, number_tab):
         if number_tab < 1 or number_tab > len(self.driver.window_handles):
             raise ValueError(f"Вкладка с номером {number_tab} не существует.")
         self.driver.switch_to.window(self.driver.window_handles[number_tab - 1])
 
-    @allure.step('Проверяем наличие модального окна и закрываем его ')
-    def modal_presence_and_close(self, locator):
-        """
-        Проверяет наличие модального окна маркетинга и закрывает его.
-        """
-        try:
-            # Проверка наличия модального окна
-            if self.check_is_displayed(locator):
-                self.logger.info("Модальное окно отображается.")
-                self.click_element(locator)
-                self.logger.info("Модальное окно закрыто.")
-            else:
-                self.logger.info("Модальное окно не отображается.")
+    @allure.step("Навести курсор на элемент")
+    def hover_over_element(self, locator):
+        """Наводит курсор на указанный элемент"""
+        element = self.find_element(locator)
+        ActionChains(self.driver).move_to_element(element).perform()
 
-        except Exception as e:
-            self.logger.error(f"Ошибка при проверке модального окна: {e}")
+    @allure.step("Дождаться исчезновения элемента")
+    def wait_for_invisibility(self, locator, timeout=10):
+        WebDriverWait(self.driver, timeout).until(
+            Ec.invisibility_of_element_located(locator))
 

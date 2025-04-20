@@ -11,10 +11,8 @@ def driver():
         chrome_options.add_argument('--headless=new')  # Запускает Chrome в безголовом режиме (без графического интерфейса)
         chrome_options.add_argument('--no-sandbox')  # Отключает песочницу (sandbox) Chrome
         chrome_options.add_argument('--disable-gpu')  # Отключает GPU-рендеринг
-        driver = webdriver.Chrome()  # Создали драйвер и передали в него настройки
+        driver = webdriver.Chrome(options=chrome_options)  # Создали драйвер и передали в него настройки
         driver.set_window_size(1920, 1080)
-        driver.set_page_load_timeout(300)    # 300 секунд на загрузку страницы
-        driver.implicitly_wait(10)           # 10 секунд ожидания элемента
         yield driver
         driver.quit()
 
