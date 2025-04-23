@@ -2,7 +2,6 @@ import allure
 from selenium.common import TimeoutException
 from selenium.webdriver.support import expected_conditions as Ec
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from data import BaseData as Bd
 import logging
